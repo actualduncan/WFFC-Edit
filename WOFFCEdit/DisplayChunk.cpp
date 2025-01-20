@@ -7,12 +7,32 @@ using namespace DirectX;
 using namespace DirectX::SimpleMath;
 
 DisplayChunk::DisplayChunk()
+	: m_texture_diffuse(nullptr)
+	, m_terrainGeometry()
+	, m_heightMap()
+	, m_terrainHeightScale(0.25f)
+	, m_terrainSize(512)
+	, m_textureCoordStep(1.0f / (TERRAINRESOLUTION - 1))
+	, m_terrainPositionScalingFactor(static_cast<float>(m_terrainSize / (TERRAINRESOLUTION - 1)))
+	, m_name("")
+	, m_chunk_x_size_metres(0)
+	, m_chunk_y_size_metres(0)
+	, m_chunk_base_resolution(0)
+	, m_heightmap_path("")
+	, m_tex_diffuse_path("")
+	, m_tex_splat_alpha_path("")
+	, m_tex_splat_1_path("")
+	, m_tex_splat_2_path("")
+	, m_tex_splat_3_path("")
+	, m_tex_splat_4_path("")
+	, m_render_wireframe(false)
+	, m_render_normals(false)
+	, m_tex_diffuse_tiling(0)
+	, m_tex_splat_1_tiling(0)
+	, m_tex_splat_2_tiling(0)
+	, m_tex_splat_3_tiling(0)
+	, m_tex_splat_4_tiling(0)
 {
-	//terrain size in meters. note that this is hard coded here, we COULD get it from the terrain chunk along with the other info from the tool if we want to be more flexible.
-	m_terrainSize = 512;
-	m_terrainHeightScale = 0.25;  //convert our 0-256 terrain to 64
-	m_textureCoordStep = 1.0 / (TERRAINRESOLUTION-1);	//-1 becuase its split into chunks. not vertices.  we want tthe last one in each row to have tex coord 1
-	m_terrainPositionScalingFactor = m_terrainSize / (TERRAINRESOLUTION-1);
 }
 
 
@@ -71,7 +91,7 @@ void DisplayChunk::InitialiseBatch()
 		for (size_t j = 0; j < TERRAINRESOLUTION; j++)
 		{
 			index = (TERRAINRESOLUTION * i) + j;
-			m_terrainGeometry[i][j].position =			Vector3(j*m_terrainPositionScalingFactor-(0.5*m_terrainSize), (float)(m_heightMap[index])*m_terrainHeightScale, i*m_terrainPositionScalingFactor-(0.5*m_terrainSize));	//This will create a terrain going from -64->64.  rather than 0->128.  So the center of the terrain is on the origin
+			m_terrainGeometry[i][j].position =			Vector3(j*m_terrainPositionScalingFactor-(0.5f*m_terrainSize), (float)(m_heightMap[index])*m_terrainHeightScale, i*m_terrainPositionScalingFactor-(0.5f*m_terrainSize));	//This will create a terrain going from -64->64.  rather than 0->128.  So the center of the terrain is on the origin
 			m_terrainGeometry[i][j].normal =			Vector3(0.0f, 1.0f, 0.0f);						//standard y =up
 			m_terrainGeometry[i][j].textureCoordinate =	Vector2(((float)m_textureCoordStep*j)*m_tex_diffuse_tiling, ((float)m_textureCoordStep*i)*m_tex_diffuse_tiling);				//Spread tex coords so that its distributed evenly across the terrain from 0-1
 			
@@ -91,7 +111,7 @@ void DisplayChunk::LoadHeightMap(std::shared_ptr<DX::DeviceResources>  DevResour
 
 	// Open The File In Read / Binary Mode.
 
-	pFile = fopen(m_heightmap_path.c_str(), "rb");
+	fopen_s(&pFile, m_heightmap_path.c_str(), "rb");
 	// Check To See If We Found The File And Could Open It
 	if (pFile == NULL)
 	{
@@ -149,7 +169,7 @@ void DisplayChunk::SaveHeightMap()
 	FILE *pFile = NULL;
 
 	// Open The File In Read / Binary Mode.
-	pFile = fopen(m_heightmap_path.c_str(), "wb+");;
+	fopen_s(&pFile, m_heightmap_path.c_str(), "wb+");;
 	// Check To See If We Found The File And Could Open It
 	if (pFile == NULL)
 	{
@@ -186,14 +206,12 @@ void DisplayChunk::GenerateHeightmap()
 
 void DisplayChunk::CalculateTerrainNormals()
 {
-	int index1, index2, index3, index4;
+	int index1(0), index2(0), index3(0), index4(0);
 	DirectX::SimpleMath::Vector3 upDownVector, leftRightVector, normalVector;
 
-
-
-	for (int i = 0; i<(TERRAINRESOLUTION - 1); i++)
+	for (int i = 1; i<(TERRAINRESOLUTION - 1); i++)
 	{
-		for (int j = 0; j<(TERRAINRESOLUTION - 1); j++)
+		for (int j = 1; j<(TERRAINRESOLUTION - 1); j++)
 		{
 			upDownVector.x = (m_terrainGeometry[i + 1][j].position.x - m_terrainGeometry[i - 1][j].position.x);
 			upDownVector.y = (m_terrainGeometry[i + 1][j].position.y - m_terrainGeometry[i - 1][j].position.y);

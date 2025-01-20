@@ -13,20 +13,25 @@ using namespace DirectX::SimpleMath;
 
 using Microsoft::WRL::ComPtr;
 
-Game::Game()
+namespace MATH
+{
+	constexpr float PI = 3.1415f;
+}
 
+Game::Game()
+	: m_InputCommands()
 {
     m_deviceResources = std::make_unique<DX::DeviceResources>();
     m_deviceResources->RegisterDeviceNotify(this);
 	m_displayList.clear();
-	
+
 	//initial Settings
 	//modes
 	m_grid = false;
 
 	//functional
-	m_movespeed = 0.30;
-	m_camRotRate = 3.0;
+	m_movespeed = 0.30f;
+	m_camRotRate = 3.0f;
 
 	//camera
 	m_camPosition.x = 0.0f;
@@ -137,6 +142,11 @@ void Game::Tick(InputCommands *Input)
     Render();
 }
 
+void Game::ClearDisplayList()
+{
+
+}
+
 // Updates the world.
 void Game::Update(DX::StepTimer const& timer)
 {
@@ -155,8 +165,8 @@ void Game::Update(DX::StepTimer const& timer)
 	}
 
 	//create look direction from Euler angles in m_camOrientation
-	m_camLookDirection.x = sin((m_camOrientation.y)*3.1415 / 180);
-	m_camLookDirection.z = cos((m_camOrientation.y)*3.1415 / 180);
+	m_camLookDirection.x = sinf((m_camOrientation.y)* MATH::PI / 180.0f);
+	m_camLookDirection.z = cosf((m_camOrientation.y)* MATH::PI / 180.0f);
 	m_camLookDirection.Normalize();
 
 	//create right vector from look Direction
@@ -244,7 +254,6 @@ void Game::Render()
 	}
 	//CAMERA POSITION ON HUD
 	m_sprites->Begin();
-	WCHAR   Buffer[256];
 	std::wstring var = L"Cam X: " + std::to_wstring(m_camPosition.x) + L"Cam Z: " + std::to_wstring(m_camPosition.z);
 	m_font->DrawString(m_sprites.get(), var.c_str() , XMFLOAT2(100, 10), Colors::Yellow);
 	m_sprites->End();
@@ -258,9 +267,9 @@ void Game::Render()
 		const XMVECTORF32 translate = { m_displayList[i].m_position.x, m_displayList[i].m_position.y, m_displayList[i].m_position.z };
 
 		//convert degrees into radians for rotation matrix
-		XMVECTOR rotate = Quaternion::CreateFromYawPitchRoll(m_displayList[i].m_orientation.y *3.1415 / 180,
-															m_displayList[i].m_orientation.x *3.1415 / 180,
-															m_displayList[i].m_orientation.z *3.1415 / 180);
+		XMVECTOR rotate = Quaternion::CreateFromYawPitchRoll(m_displayList[i].m_orientation.y * MATH::PI / 180.0f,
+															m_displayList[i].m_orientation.x * MATH::PI / 180.0f,
+															m_displayList[i].m_orientation.z * MATH::PI / 180.0f);
 
 		XMMATRIX local = m_world * XMMatrixTransformation(g_XMZero, Quaternion::Identity, scale, g_XMZero, rotate, translate);
 
@@ -396,8 +405,8 @@ void Game::BuildDisplayList(std::vector<SceneObject> * SceneGraph)
 	}
 
 	//for every item in the scenegraph
-	int numObjects = SceneGraph->size();
-	for (int i = 0; i < numObjects; i++)
+	size_t numObjects = SceneGraph->size();
+	for (size_t i = 0; i < numObjects; i++)
 	{
 		
 		//create a temp display object that we will populate then append to the display list.
@@ -413,7 +422,7 @@ void Game::BuildDisplayList(std::vector<SceneObject> * SceneGraph)
 		rs = CreateDDSTextureFromFile(device, texturewstr.c_str(), nullptr, &newDisplayObject.m_texture_diffuse);	//load tex into Shader resource
 
 		//if texture fails.  load error default
-		if (rs)
+		if (FAILED(rs))
 		{
 			CreateDDSTextureFromFile(device, L"database/data/Error.dds", nullptr, &newDisplayObject.m_texture_diffuse);	//load tex into Shader resource
 		}
