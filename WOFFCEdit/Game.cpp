@@ -34,6 +34,7 @@ Game::Game()
 	m_camRotRate = 3.0f;
 
 	//camera
+    m_camera = std::make_unique<Camera>();
 	m_camPosition.x = 0.0f;
 	m_camPosition.y = 3.7f;
 	m_camPosition.z = -3.5f;
@@ -155,46 +156,15 @@ void Game::Update(DX::StepTimer const& timer)
 	Vector3 planarMotionVector = m_camLookDirection;
 	planarMotionVector.y = 0.0;
 
-	if (m_InputCommands.rotRight)
-	{
-		m_camOrientation.y -= m_camRotRate;
-	}
-	if (m_InputCommands.rotLeft)
-	{
-		m_camOrientation.y += m_camRotRate;
-	}
 
-	//create look direction from Euler angles in m_camOrientation
-	m_camLookDirection.x = sinf((m_camOrientation.y)* MATH::PI / 180.0f);
-	m_camLookDirection.z = cosf((m_camOrientation.y)* MATH::PI / 180.0f);
-	m_camLookDirection.Normalize();
+    //process input and update stuff
+    m_camera->Rotate(m_InputCommands.pitch, m_InputCommands.yaw);
 
-	//create right vector from look Direction
-	m_camLookDirection.Cross(Vector3::UnitY, m_camRight);
+	m_camera->Move(Vector3(m_InputCommands.horizonal_x, m_InputCommands.vertical, m_InputCommands.horizontal_z));
 
-	//process input and update stuff
-	if (m_InputCommands.forward)
-	{	
-		m_camPosition += m_camLookDirection*m_movespeed;
-	}
-	if (m_InputCommands.back)
-	{
-		m_camPosition -= m_camLookDirection*m_movespeed;
-	}
-	if (m_InputCommands.right)
-	{
-		m_camPosition += m_camRight*m_movespeed;
-	}
-	if (m_InputCommands.left)
-	{
-		m_camPosition -= m_camRight*m_movespeed;
-	}
+    m_camera->Update(m_view);
 
-	//update lookat point
-	m_camLookAt = m_camPosition + m_camLookDirection;
-
-	//apply camera vectors
-    m_view = Matrix::CreateLookAt(m_camPosition, m_camLookAt, Vector3::UnitY);
+   
 
     m_batchEffect->SetView(m_view);
     m_batchEffect->SetWorld(Matrix::Identity);

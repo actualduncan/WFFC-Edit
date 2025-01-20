@@ -7,7 +7,9 @@ public:
 	Camera();
 	~Camera();
 
-	void Update();
+	void Update(DirectX::SimpleMath::Matrix& view);
+	void Rotate(float pitch, float yaw);
+	void Move(DirectX::SimpleMath::Vector3 direction);
 private:
 	//camera
 	DirectX::SimpleMath::Vector3		m_camPosition;
