@@ -16,12 +16,14 @@ ToolMain::ToolMain()
 	m_width = 0;
 	m_toolHandle = NULL;
 
-	//zero input commands
-	m_toolInputCommands.horizonal_x		    = 0.0f;
-	m_toolInputCommands.horizontal_z		= 0.0f;
-	m_toolInputCommands.vertical		    = 0.0f;
-	m_toolInputCommands.pitch				= 0.0f;
-	m_toolInputCommands.yaw					= 0.0f;
+	// zero input commands
+	m_toolInputCommands.horizontalX = 0.0f;
+	m_toolInputCommands.horizontalZ	= 0.0f;
+	m_toolInputCommands.vertical = 0.0f;
+	m_toolInputCommands.mouseLButtonDown = false;
+	m_toolInputCommands.mouseRButtonDown = false;
+	m_toolInputCommands.mouseX = 0;
+	m_toolInputCommands.mouseY = 0;
 }
 
 
@@ -296,6 +298,8 @@ void ToolMain::Tick(MSG *msg)
 
 void ToolMain::UpdateInput(MSG * msg)
 {
+	// Flush commands
+	m_toolInputCommands.Reset();
 
 	switch (msg->message)
 	{
@@ -309,47 +313,56 @@ void ToolMain::UpdateInput(MSG * msg)
 		break;
 
 	case WM_MOUSEMOVE:
+		POINT p;
+		if (GetCursorPos(&p))
+		{
+			m_toolInputCommands.mouseX = p.x;
+			m_toolInputCommands.mouseY = p.y;
+		}
 		break;
 
-	case WM_LBUTTONDOWN:	//mouse button down,  you will probably need to check when its up too
-		//set some flag for the mouse button in inputcommands
+	case WM_LBUTTONDOWN:	
+		m_toolInputCommands.mouseLButtonDown = true;
 		break;
+	case WM_RBUTTONDOWN:	
+		m_toolInputCommands.mouseRButtonDown = true;
+		break;
+	case WM_LBUTTONUP:
+		m_toolInputCommands.mouseLButtonDown = false;
+		break;
+	case WM_RBUTTONUP:
+		m_toolInputCommands.mouseRButtonDown = false;
 
 	}
 	//here we update all the actual app functionality that we want.  This information will either be used int toolmain, or sent down to the renderer (Camera movement etc
 	
-	// Flush commands
-	m_toolInputCommands.Reset();
-
-	
 	//WASD movement
 	if (m_keyArray['W'])
 	{
-		m_toolInputCommands.horizontal_z = 1.0f;
+		m_toolInputCommands.horizontalZ = 1.0f;
 	}
 	if (m_keyArray['S'])
 	{
-		m_toolInputCommands.horizontal_z = -1.0f;
+		m_toolInputCommands.horizontalZ = -1.0f;
 	}
 	if (m_keyArray['A'])
 	{
-		m_toolInputCommands.horizonal_x = -1.0f;
+		m_toolInputCommands.horizontalX = -1.0f;
 	}
 	if (m_keyArray['D'])
 	{
-		m_toolInputCommands.horizonal_x = 1.0f;
+		m_toolInputCommands.horizontalX = 1.0f;
 	}
 
-	//rotation
+	// Up/Down
 	if (m_keyArray['E'])
 	{
-		m_toolInputCommands.yaw = -1.0f;
+		m_toolInputCommands.vertical = 1.0f;
 	}
 	if (m_keyArray['Q'])
 	{
-		m_toolInputCommands.yaw = 1.0f;
+		m_toolInputCommands.vertical = -1.0f;
 	}
 
 
-	//WASD
 }

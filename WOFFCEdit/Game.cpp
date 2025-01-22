@@ -34,7 +34,7 @@ Game::Game()
 	m_camRotRate = 3.0f;
 
 	//camera
-    m_camera = std::make_unique<Camera>();
+
 	m_camPosition.x = 0.0f;
 	m_camPosition.y = 3.7f;
 	m_camPosition.z = -3.5f;
@@ -90,6 +90,9 @@ void Game::Initialize(HWND window, int width, int height)
     m_deviceResources->CreateWindowSizeDependentResources();
     CreateWindowSizeDependentResources();
 
+    m_camera = std::make_unique<Camera>(window, width, height);
+    m_width = width;
+    m_height = height;
 #ifdef DXTK_AUDIO
     // Create DirectXTK for Audio objects
     AUDIO_ENGINE_FLAGS eflags = AudioEngine_Default;
@@ -156,19 +159,14 @@ void Game::Update(DX::StepTimer const& timer)
 	Vector3 planarMotionVector = m_camLookDirection;
 	planarMotionVector.y = 0.0;
 
-
     //process input and update stuff
-    m_camera->Rotate(m_InputCommands.pitch, m_InputCommands.yaw);
 
-	m_camera->Move(Vector3(m_InputCommands.horizonal_x, m_InputCommands.vertical, m_InputCommands.horizontal_z));
 
-    m_camera->Update(m_view);
+    m_camera->Update(m_InputCommands, timer);
 
-   
-
-    m_batchEffect->SetView(m_view);
+    m_batchEffect->SetView(m_camera->GetView());
     m_batchEffect->SetWorld(Matrix::Identity);
-	m_displayChunk.m_terrainEffect->SetView(m_view);
+	m_displayChunk.m_terrainEffect->SetView(m_camera->GetView());
 	m_displayChunk.m_terrainEffect->SetWorld(Matrix::Identity);
 
 #ifdef DXTK_AUDIO
@@ -224,8 +222,10 @@ void Game::Render()
 	}
 	//CAMERA POSITION ON HUD
 	m_sprites->Begin();
-	std::wstring var = L"Cam X: " + std::to_wstring(m_camPosition.x) + L"Cam Z: " + std::to_wstring(m_camPosition.z);
+	std::wstring var = L"mouse X: " + std::to_wstring(m_InputCommands.mouseX) + L" mouse Y: " + std::to_wstring(m_InputCommands.mouseY);
 	m_font->DrawString(m_sprites.get(), var.c_str() , XMFLOAT2(100, 10), Colors::Yellow);
+    std::wstring vart = L"delta X: " + std::to_wstring((m_InputCommands.mouseX - (m_width / 2))) + L" delta Y: " + std::to_wstring((m_InputCommands.mouseY - (m_height/2)));
+    m_font->DrawString(m_sprites.get(), vart.c_str(), XMFLOAT2(100, 50), Colors::Green);
 	m_sprites->End();
 
 	//RENDER OBJECTS FROM SCENEGRAPH
@@ -243,7 +243,7 @@ void Game::Render()
 
 		XMMATRIX local = m_world * XMMatrixTransformation(g_XMZero, Quaternion::Identity, scale, g_XMZero, rotate, translate);
 
-		m_displayList[i].m_model->Draw(context, *m_states, local, m_view, m_projection, false);	//last variable in draw,  make TRUE for wireframe
+		m_displayList[i].m_model->Draw(context, *m_states, local, m_camera->GetView(), m_projection, false);	//last variable in draw,  make TRUE for wireframe
 
 		m_deviceResources->PIXEndEvent();
 	}

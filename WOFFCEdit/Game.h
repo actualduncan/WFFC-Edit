@@ -125,10 +125,10 @@ private:
 #endif
 
     DirectX::SimpleMath::Matrix                                             m_world;
-    DirectX::SimpleMath::Matrix                                             m_view;
     DirectX::SimpleMath::Matrix                                             m_projection;
 
-
+	int m_width;
+	int m_height;
 };
 
 std::wstring StringToWCHART(std::string s);

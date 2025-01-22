@@ -3,16 +3,20 @@
 struct InputCommands
 {
 	void Reset() {
-		horizontal_z = 0.0f;
-		horizonal_x = 0.0f;
+		horizontalZ = 0.0f;
+		horizontalX = 0.0f;
 		vertical = 0.0f;
 		pitch = 0.0f;
 		yaw = 0.0f;
 
 	}
-	float horizontal_z;
-	float horizonal_x;
+
+	float horizontalZ;
+	float horizontalX;
 	float vertical;
-	float pitch;
-	float yaw;
+	int mouseX;
+	int mouseY;
+	bool mouseLButtonDown;
+	bool mouseRButtonDown;
+
 };
