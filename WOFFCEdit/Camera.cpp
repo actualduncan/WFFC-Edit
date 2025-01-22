@@ -8,6 +8,7 @@ float clamp(float n, float lower, float upper)
 {
 	return n <= lower ? lower : n >= upper ? upper : n;
 }
+
 Camera::Camera(HWND hwnd,int windowWidth, int windowHeight)
 	: m_camPosition(0.0f, 3.7f, -3.5f)
 	, m_camRotation(0.0f, 0.0f, 0.0f)
