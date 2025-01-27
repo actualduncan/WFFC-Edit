@@ -165,6 +165,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Action.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ChunkObject.cpp" />
     <ClCompile Include="DeviceResources.cpp" />
@@ -176,12 +177,14 @@
     <ClCompile Include="MFCRenderFrame.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="MFCMain.cpp" />
+    <ClCompile Include="PickAction.cpp" />
     <ClCompile Include="SceneObject.cpp" />
     <ClCompile Include="SelectDialogue.cpp" />
     <ClCompile Include="sqlite3.c" />
     <ClCompile Include="ToolMain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Action.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ChunkObject.h" />
     <ClInclude Include="DeviceResources.h" />
@@ -192,6 +195,7 @@
     <ClInclude Include="MFCFrame.h" />
     <ClInclude Include="MFCRenderFrame.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="PickAction.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SceneObject.h" />
     <ClInclude Include="SelectDialogue.h" />

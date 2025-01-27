@@ -13,10 +13,6 @@ using namespace DirectX::SimpleMath;
 
 using Microsoft::WRL::ComPtr;
 
-namespace MATH
-{
-	constexpr float PI = 3.1415f;
-}
 
 Game::Game()
 	: m_InputCommands()
@@ -64,6 +60,7 @@ Game::Game()
 Game::~Game()
 {
 
+    m_camera.reset();
 #ifdef DXTK_AUDIO
     if (m_audEngine)
     {
@@ -75,6 +72,7 @@ Game::~Game()
 // Initialize the Direct3D resources required to run.
 void Game::Initialize(HWND window, int width, int height)
 {
+    m_window = window;
     m_gamePad = std::make_unique<GamePad>();
 
     m_keyboard = std::make_unique<Keyboard>();
@@ -90,9 +88,6 @@ void Game::Initialize(HWND window, int width, int height)
     m_deviceResources->CreateWindowSizeDependentResources();
     CreateWindowSizeDependentResources();
 
-    m_camera = std::make_unique<Camera>(window, width, height);
-    m_width = width;
-    m_height = height;
 #ifdef DXTK_AUDIO
     // Create DirectXTK for Audio objects
     AUDIO_ENGINE_FLAGS eflags = AudioEngine_Default;
@@ -168,7 +163,6 @@ void Game::Update(DX::StepTimer const& timer)
     m_batchEffect->SetWorld(Matrix::Identity);
 	m_displayChunk.m_terrainEffect->SetView(m_camera->GetView());
 	m_displayChunk.m_terrainEffect->SetWorld(Matrix::Identity);
-
 #ifdef DXTK_AUDIO
     m_audioTimerAcc -= (float)timer.GetElapsedSeconds();
     if (m_audioTimerAcc < 0)
@@ -226,6 +220,15 @@ void Game::Render()
 	m_font->DrawString(m_sprites.get(), var.c_str() , XMFLOAT2(100, 10), Colors::Yellow);
     std::wstring vart = L"delta X: " + std::to_wstring((m_InputCommands.mouseX - (m_width / 2))) + L" delta Y: " + std::to_wstring((m_InputCommands.mouseY - (m_height/2)));
     m_font->DrawString(m_sprites.get(), vart.c_str(), XMFLOAT2(100, 50), Colors::Green);
+    std::wstring intersect = L"false";
+    if (m_camera->intersected)
+    {
+        intersect = L"true";
+    }
+
+    std::wstring vartt = L"intersected? " + intersect;
+    m_font->DrawString(m_sprites.get(), vartt.c_str(), XMFLOAT2(100, 90), Colors::Black);
+
 	m_sprites->End();
 
 	//RENDER OBJECTS FROM SCENEGRAPH
@@ -237,13 +240,13 @@ void Game::Render()
 		const XMVECTORF32 translate = { m_displayList[i].m_position.x, m_displayList[i].m_position.y, m_displayList[i].m_position.z };
 
 		//convert degrees into radians for rotation matrix
-		XMVECTOR rotate = Quaternion::CreateFromYawPitchRoll(m_displayList[i].m_orientation.y * MATH::PI / 180.0f,
-															m_displayList[i].m_orientation.x * MATH::PI / 180.0f,
-															m_displayList[i].m_orientation.z * MATH::PI / 180.0f);
+		XMVECTOR rotate = Quaternion::CreateFromYawPitchRoll(m_displayList[i].m_orientation.y * XM_PI / 180.0f,
+															m_displayList[i].m_orientation.x * XM_PI / 180.0f,
+															m_displayList[i].m_orientation.z * XM_PI / 180.0f);
 
-		XMMATRIX local = m_world * XMMatrixTransformation(g_XMZero, Quaternion::Identity, scale, g_XMZero, rotate, translate);
-
-		m_displayList[i].m_model->Draw(context, *m_states, local, m_camera->GetView(), m_projection, false);	//last variable in draw,  make TRUE for wireframe
+        XMMATRIX local = m_world * XMMatrixTransformation(g_XMZero, Quaternion::Identity, scale, g_XMZero, rotate, translate);
+        m_displayList[i].m_wireframe = m_displayList[i].m_selected;
+		m_displayList[i].m_model->Draw(context, *m_states, local, m_camera->GetView(), m_camera->GetProjectionMatrix(), m_displayList[i].m_wireframe);	//last variable in draw,  make TRUE for wireframe
 
 		m_deviceResources->PIXEndEvent();
 	}
@@ -452,7 +455,7 @@ void Game::BuildDisplayChunk(ChunkObject * SceneChunk)
 	//which, to be honest, is almost all of it. Its mostly rendering related info so...
 	m_displayChunk.PopulateChunkData(SceneChunk);		//migrate chunk data
 	m_displayChunk.LoadHeightMap(m_deviceResources);
-	m_displayChunk.m_terrainEffect->SetProjection(m_projection);
+	m_displayChunk.m_terrainEffect->SetProjection(m_camera->GetProjectionMatrix());
 	m_displayChunk.InitialiseBatch();
 }
 
@@ -534,24 +537,18 @@ void Game::CreateWindowSizeDependentResources()
 {
     auto size = m_deviceResources->GetOutputSize();
     float aspectRatio = float(size.right) / float(size.bottom);
-    float fovAngleY = 70.0f * XM_PI / 180.0f;
 
-    // This is a simple example of change that can be made when the app is in
-    // portrait or snapped view.
-    if (aspectRatio < 1.0f)
+
+    if (m_camera.get() == nullptr)
     {
-        fovAngleY *= 2.0f;
+        m_camera = std::make_unique<Camera>(m_window, aspectRatio, &m_displayList);
+    }
+    else
+    {
+        m_camera->WindowSizeChanged(aspectRatio);
     }
 
-    // This sample makes use of a right-handed coordinate system using row-major matrices.
-    m_projection = Matrix::CreatePerspectiveFieldOfView(
-        fovAngleY,
-        aspectRatio,
-        0.01f,
-        1000.0f
-    );
-
-    m_batchEffect->SetProjection(m_projection);
+    m_batchEffect->SetProjection(m_camera->GetProjectionMatrix());
 	
 }
 

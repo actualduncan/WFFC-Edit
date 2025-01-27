@@ -146,7 +146,7 @@ void ToolMain::onActionLoad()
 		newSceneObject.light_constant = sqlite3_column_double(pResults, 53);
 		newSceneObject.light_linear = sqlite3_column_double(pResults, 54);
 		newSceneObject.light_quadratic = sqlite3_column_double(pResults, 55);
-	
+
 
 		//send completed object to scenegraph
 		m_sceneGraph.push_back(newSceneObject);

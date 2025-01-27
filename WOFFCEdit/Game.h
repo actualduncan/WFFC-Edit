@@ -65,6 +65,8 @@ private:
 
 	void XM_CALLCONV DrawGrid(DirectX::FXMVECTOR xAxis, DirectX::FXMVECTOR yAxis, DirectX::FXMVECTOR origin, size_t xdivs, size_t ydivs, DirectX::GXMVECTOR color);
 
+	HWND m_window;
+
 	//tool specific
 	std::vector<DisplayObject>			m_displayList;
 	DisplayChunk						m_displayChunk;
@@ -81,6 +83,9 @@ private:
 	DirectX::SimpleMath::Vector3		m_camLookDirection;
 	DirectX::SimpleMath::Vector3		m_camRight;
 	float m_camRotRate;
+
+	//picking
+	
 
 	//control variables
 	bool m_grid;							//grid rendering on / off

@@ -1,6 +1,7 @@
 #include "Camera.h"
 #include <algorithm>
 #include <iostream>
+#include "DisplayObject.h"
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
 
@@ -9,47 +10,73 @@ float clamp(float n, float lower, float upper)
 	return n <= lower ? lower : n >= upper ? upper : n;
 }
 
-Camera::Camera(HWND hwnd,int windowWidth, int windowHeight)
+Camera::Camera(HWND window, float aspectRatio, std::vector<DisplayObject>* displayList, float minZ, float maxZ)
 	: m_camPosition(0.0f, 3.7f, -3.5f)
 	, m_camRotation(0.0f, 0.0f, 0.0f)
 	, m_camLookAt(0.0f, 0.0f, 1.0f)
 	, m_camRight(0.0f, 0.0f, 0.0f)
 	, m_camRotRate(0.1f)
 	, m_movespeed(30.0f)
-	, m_width(windowWidth)
-	, m_height(windowHeight)
-	, m_hwnd(hwnd)
+	, m_window(window)
 	, m_cursor()
 {
+
+	WindowSizeChanged(aspectRatio, minZ, maxZ);
+	
+	pAction = PickAction(' ', displayList);
 }
 
 Camera::~Camera()
 {
+
+}
+
+void Camera::WindowSizeChanged(float aspectRatio, float minZ, float maxZ)
+{
+	float fovAngleY = 70.0f * XM_PI / 180.0f;
+
+	// This is a simple example of change that can be made when the app is in
+	// portrait or snapped view.
+	if (aspectRatio < 1.0f)
+	{
+		fovAngleY *= 2.0f;
+	}
+
+	m_projectionMatrix = Matrix::CreatePerspectiveFieldOfView(
+		fovAngleY,
+		aspectRatio,
+		minZ,
+		maxZ
+	);
 }
 
 void Camera::Update(InputCommands input, DX::StepTimer const& timer)
 {
-	float deltaTime = timer.GetElapsedSeconds();
+	GetClientRect(m_window, &m_viewportRect);
 
+	m_cursor.x = input.mouseX;
+	m_cursor.y = input.mouseY;
+
+	float deltaTime = timer.GetElapsedSeconds();
  	if (input.mouseRButtonDown && isMouseActive)
 	{
-		int deltax = input.mouseX - (m_width / 2);
-		int deltay = input.mouseY - (m_height / 2);
+		int deltax = m_cursor.x - (m_viewportRect.right / 2);
+		int deltay = m_cursor.y - (m_viewportRect.bottom / 2);
 		
 		Rotate(deltax, deltay, deltaTime);
-		m_cursor.x = (m_width / 2);
-		m_cursor.y = (m_height / 2);
+		m_cursor.x = (m_viewportRect.right / 2);
+		m_cursor.y = (m_viewportRect.bottom / 2);
 
 		SetCursorPos(m_cursor.x, m_cursor.y);
 	}
 	
 	if (input.mouseRButtonDown && !isMouseActive)
 	{
-		m_cursor.x = (m_width / 2);
-		m_cursor.y = (m_height / 2);
+		m_cursor.x = (m_viewportRect.right / 2);
+		m_cursor.y = (m_viewportRect.bottom / 2);
 
 		SetCursorPos(m_cursor.x, m_cursor.y);
-		int what = ShowCursor(false);
+		ShowCursor(false);
 		isMouseActive = true;
 	}
 
@@ -58,10 +85,23 @@ void Camera::Update(InputCommands input, DX::StepTimer const& timer)
 		ShowCursor(true);
 		isMouseActive = false;
 	}
+	
 
+
+	
 	Move(Vector3(input.horizontalX, input.vertical, input.horizontalZ), deltaTime);
 
 	CalculateView();
+
+	if (input.mouseLButtonDown && !pAction.OnCooldown())
+	{
+		if (ScreenToClient(m_window, &m_cursor))
+		{
+			intersected = pAction.ExecuteAction(Vector2(m_cursor.x, m_cursor.y), m_viewportRect, m_projectionMatrix, m_view);
+		}
+	}
+
+	pAction.CooldownUpdate(deltaTime);
 }
 
 void Camera::CalculateView()
@@ -106,4 +146,14 @@ void Camera::Move(Vector3 direction, float dt)
 Matrix Camera::GetView()
 {
 	return m_view;
+}
+
+void Camera::SetProjection(Matrix projectionMatrix)
+{
+	m_projectionMatrix = projectionMatrix;
+}
+
+Matrix Camera::GetProjectionMatrix()
+{
+	return m_projectionMatrix;
 }

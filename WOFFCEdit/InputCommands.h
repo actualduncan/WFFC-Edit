@@ -6,8 +6,6 @@ struct InputCommands
 		horizontalZ = 0.0f;
 		horizontalX = 0.0f;
 		vertical = 0.0f;
-		pitch = 0.0f;
-		yaw = 0.0f;
 
 	}
 
