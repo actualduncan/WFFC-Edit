@@ -24,37 +24,6 @@ Game::Game()
 	//initial Settings
 	//modes
 	m_grid = false;
-
-	//functional
-	m_movespeed = 0.30f;
-	m_camRotRate = 3.0f;
-
-	//camera
-
-	m_camPosition.x = 0.0f;
-	m_camPosition.y = 3.7f;
-	m_camPosition.z = -3.5f;
-
-	m_camOrientation.x = 0;
-	m_camOrientation.y = 0;
-	m_camOrientation.z = 0;
-
-	m_camLookAt.x = 0.0f;
-	m_camLookAt.y = 0.0f;
-	m_camLookAt.z = 0.0f;
-
-	m_camLookDirection.x = 0.0f;
-	m_camLookDirection.y = 0.0f;
-	m_camLookDirection.z = 0.0f;
-
-	m_camRight.x = 0.0f;
-	m_camRight.y = 0.0f;
-	m_camRight.z = 0.0f;
-
-	m_camOrientation.x = 0.0f;
-	m_camOrientation.y = 0.0f;
-	m_camOrientation.z = 0.0f;
-
 }
 
 Game::~Game()
@@ -149,13 +118,7 @@ void Game::ClearDisplayList()
 // Updates the world.
 void Game::Update(DX::StepTimer const& timer)
 {
-	//TODO  any more complex than this, and the camera should be abstracted out to somewhere else
-	//camera motion is on a plane, so kill the 7 component of the look direction
-	Vector3 planarMotionVector = m_camLookDirection;
-	planarMotionVector.y = 0.0;
-
     //process input and update stuff
-
 
     m_camera->Update(m_InputCommands, timer);
 
@@ -216,19 +179,12 @@ void Game::Render()
 	}
 	//CAMERA POSITION ON HUD
 	m_sprites->Begin();
+    // insert text elements...
+    // Example:
+    /*
 	std::wstring var = L"mouse X: " + std::to_wstring(m_InputCommands.mouseX) + L" mouse Y: " + std::to_wstring(m_InputCommands.mouseY);
 	m_font->DrawString(m_sprites.get(), var.c_str() , XMFLOAT2(100, 10), Colors::Yellow);
-    std::wstring vart = L"delta X: " + std::to_wstring((m_InputCommands.mouseX - (m_width / 2))) + L" delta Y: " + std::to_wstring((m_InputCommands.mouseY - (m_height/2)));
-    m_font->DrawString(m_sprites.get(), vart.c_str(), XMFLOAT2(100, 50), Colors::Green);
-    std::wstring intersect = L"false";
-    if (m_camera->intersected)
-    {
-        intersect = L"true";
-    }
-
-    std::wstring vartt = L"intersected? " + intersect;
-    m_font->DrawString(m_sprites.get(), vartt.c_str(), XMFLOAT2(100, 90), Colors::Black);
-
+    */
 	m_sprites->End();
 
 	//RENDER OBJECTS FROM SCENEGRAPH

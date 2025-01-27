@@ -72,20 +72,9 @@ private:
 	DisplayChunk						m_displayChunk;
 	InputCommands						m_InputCommands;
 
-	//functionality
-	float								m_movespeed;
-
 	//camera
 	std::unique_ptr<Camera> m_camera;
-	DirectX::SimpleMath::Vector3		m_camPosition;
-	DirectX::SimpleMath::Vector3		m_camOrientation;
-	DirectX::SimpleMath::Vector3		m_camLookAt;
-	DirectX::SimpleMath::Vector3		m_camLookDirection;
-	DirectX::SimpleMath::Vector3		m_camRight;
-	float m_camRotRate;
 
-	//picking
-	
 
 	//control variables
 	bool m_grid;							//grid rendering on / off
@@ -130,7 +119,6 @@ private:
 #endif
 
     DirectX::SimpleMath::Matrix                                             m_world;
-    DirectX::SimpleMath::Matrix                                             m_projection;
 
 	int m_width;
 	int m_height;
